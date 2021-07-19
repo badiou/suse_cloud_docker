@@ -1,0 +1,66 @@
+FROM -  to set the base image
+RUN - to execute a command
+COPY & ADD  - to copy files from host to the container
+CMD - to set the default command to execute when the container starts
+EXPOSE - to expose an application port 
+-------------------------------------------------------------------
+# set the base image. Since we're running 
+# a Python application a Python base image is used
+FROM python:3.8
+# set a key-value label for the Docker image
+LABEL maintainer="Katie Gamanji"
+# copy files from the host to the container filesystem. 
+# For example, all the files in the current directory
+# to the  `/app` directory in the container
+COPY . /app
+#  defines the working directory within the container
+WORKDIR /app
+# run commands within the container. 
+# For example, invoke a pip command 
+# to install dependencies defined in the requirements.txt file. 
+RUN pip install -r requirements.txt
+# provide a command to run on container start. 
+# For example, start the `app.py` application.
+CMD [ "python", "app.py" ]
+---------------------------------------------------------------------------
+
+# build an image using the Dockerfile from the current directory
+docker build -t python-helloworld .
+
+# build an image using the Dockerfile from the `lesson1/python-app` directory
+docker build -t python-helloworld lesson1/python-app
+---------------------------------------------------------------------------------
+# execute an image
+# OPTIONS - optional;  define extra configuration
+# IMAGE -  required; provides the name of the image to be executed
+# COMMAND and ARGS - optional; instruct the container to run specific commands when it starts 
+docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
+
+# Where OPTIONS can be:
+-d, --detach - run in the background 
+-p, --publish - expose container port to host
+-it - start an interactive shell
+
+# Find all valid options for this command 
+docker run --help
+---------------------------------------------------------------------------------------
+# run the `python-helloworld` image, in detached mode and expose it on port `5111`
+docker run -d -p 5111:5000 python-helloworld
+----------------------------------------------------------------------------------------
+# tag an image
+# SOURCE_IMAGE[:TAG]  - required and the tag is optional; define the name of an image on the current machine 
+# TARGET_IMAGE[:TAG] -  required and the tag is optional; define the repository, name, and version of an image
+docker tag SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]
+-------------------------------------------------------------------------------------------------
+# tag the `python-helloworld` image, to be pushed 
+# in the `pixelpotato` repository, with the `python-helloworld` image name
+# and version `v1.0.0`
+docker tag python-helloworld pixelpotato/python-helloworld:v1.0.0
+---------------------------------------------------------------------------------------
+# push an image to a registry 
+# NAME[:TAG] - required and the tag is optional; name, set the image name to be pushed to the registry
+docker push NAME[:TAG]
+------------------------------------------------------------------------------------------
+# push the `python-helloworld` application in version v1.0.0 
+# to the `pixelpotato` repository in DockerHub
+docker push pixelpotato/python-helloworld:v1.0.0

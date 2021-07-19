@@ -1,0 +1,169 @@
+docker build -t python-helloword .  (permet d'exécuter les commandes dans le docker file)
+docker run -d -p 5000:5000 python-helloword (permet d'exécuter l'image sur le port 5000)
+docker ps (voir la liste des images dockers)
+docker tag python-helloword ourobadiou/python-helloword:v1.0.0 
+docker (voir la liste des images)
+docker push ourobadiou/python-helloword:v1.0.0    (si vous avez une erreur access denied exacuter la commande suivante)
+docker login
+
+# Inspect available vagrant boxes 
+vagrant status 
+
+# create a vagrant box using the Vagrantfile in the current directory
+vagrant up
+
+# SSH into the vagrant box
+# Note: this command uses the .vagrant folder to identify the details of the vagrant box
+vagrant ssh
+------------------------------------------
+k3s.io (Lancer la commande)
+
+---------------------------------------------------
+# create a Deployment resource
+# NAME - required; set the name of the deployment
+# IMAGE - required;  specify the Docker image to be executed
+# FLAGS - optional; provide extra configuration parameters for the resource
+# COMMAND and args - optional; instruct the container to run specific commands when it starts 
+kubectl create deploy NAME --image=image [FLAGS] -- [COMMAND] [args]
+
+# Some of the widely used FLAGS are:
+-r, --replicas - set the number of replicas
+-n, --namespace - set the namespace to run
+--port - expose the container port
+-----------------------------------------------------------
+# create a go-helloworld Deployment in namespace `test`
+kubectl create deploy go-helloworld --image=pixelpotato/go-helloworld:v1.0.0 -n test
+---------------------------------------------------------------
+# create a headless pod
+# NAME - required; set the name of the pod
+# IMAGE - required;  specify the Docker image to be executed
+# FLAGS - optional; provide extra configuration parameters for the resource
+# COMMAND and args - optional; instruct the container to run specific commands when it starts 
+kubectl run NAME --image=image [FLAGS] -- [COMMAND] [args...]
+
+# Some of the widely used FLAGS are:
+--restart - set the restart policy. Options [Always, OnFailure, Never]
+--dry-run - dry run the command. Options [none, client, server]
+-it - open an interactive shell to the container
+-----------------------------------------------------------------------------------------
+# example: create a busybox pod, with an interactive shell and a restart policy set to Never 
+kubectl run -it busybox-test --image=busybox --restart=Never
+
+Exercice commandes
+
+kubectl create deploy go-helloword --image=ourobadiou/go-helloword:v1.0.0
+kubectl get po
+kubectl port-forward po/go-helloword-56f778754d-z6ctz 6111:6111
+------------------------------------------------------------------------------
+Modifier l'application pour faire un autre deploiement
+kubectl edit deploy go-helloword -o yaml
+
+
+
+# expose a Deployment through a Service resource 
+# NAME - required; set the name of the deployment to be exposed
+# --port - required; specify the port that the service should serve on
+# --target-port - optional; specify the port on the container that the service should direct traffic to
+# FLAGS - optional; provide extra configuration parameters for the service
+kubectl expose deploy NAME --port=port [--target-port=port] [FLAGS]
+
+# Some of the widely used FLAGS are:
+--protocol - set the network protocol. Options [TCP|UDP|SCTP]
+--type - set the type of service. Options [ClusterIP, NodePort, LoadBalancer]
+kubectl expose deploy go-helloworld --port=8111 --target-port=6112
+-------------------------------------------
+config map
+kubectl get cm
+ kubectl create cm test-cm --from-literal=color=blue
+
+kubectl create secret generic test-sec --from-literal=color=red
+kubectl get secrets test-sec -o yaml (permet de voir le contenu et c'est code en 64)
+
+echo "cmVk" | base64 -d (Pour décoder !!!. ceci affiche red)
+
+
+Kubectl fournit un riche ensemble d'actions qui peuvent être utilisées pour interagir, gérer et configurer les ressources Kubernetes. Vous trouverez ci-dessous une liste de commandes kubectl pratiques utilisées dans la pratique.
+
+Remarque : Dans les commandes suivantes, les arguments suivants sont utilisés :
+
+RESSOURCE est le type de ressource Kubernetes
+NAME définit le nom de la ressource
+Les FLAGS sont utilisés pour fournir une configuration supplémentaire
+PARAMS sont utilisés pour fournir la configuration requise à la ressource
+Créer des ressources
+Pour créer des ressources, utilisez la commande suivante :
+
+kubectl create RESOURCE NAME [FLAGS]
+Décrire les ressources
+Pour décrire les ressources, utilisez la commande suivante :
+
+kubectl describe RESOURCE NAME 
+Obtenir des ressources
+Pour obtenir des ressources, utilisez la commande suivante, où -o yamlindique que le résultat doit être au format YAML.
+
+kubectl get RESOURCE NAME [-o yaml]
+Modifier les ressources
+Pour modifier les ressources, utilisez la commande suivante, où -o yamlindique que la modification doit être au format YAML.
+
+kubectl edit RESOURCE NAME [-o yaml]
+Ressources d'étiquettes
+Pour étiqueter les ressources, utilisez la commande suivante :
+
+kubectl label RESOURCE NAME [PARAMS]
+Transfert de port vers les ressources
+Pour accéder aux ressources via la redirection de port, utilisez la commande suivante :
+
+kubectl port-forward RESOURCE/NAME [PARAMS]
+Journaux des ressources
+Pour accéder aux journaux à partir d'une ressource, utilisez la commande suivante :
+
+kubectl logs RESOURCE/NAME [FLAGS]
+Supprimer des ressources
+Pour supprimer des ressources, utilisez la commande suivante :
+
+kubectl delete RESOURCE NAME
+
+
+# create the namespace 
+# note: label option is not available with `kubectl create`
+kubectl create ns demo
+
+# label the namespace
+kubectl label ns demo tier=test
+
+# create the nginx-alpine deployment 
+kubectl create deploy nginx-alpine --image=nginx:alpine  --replicas=3 --namespace demo
+
+# label the deployment
+kubectl label deploy nginx-alpine app=nginx tag=alpine --namespace demo
+
+# expose the nginx-alpine deployment, which will create a service
+kubectl expose deployment nginx-alpine --port=8111 --namespace demo
+
+# create a config map
+kubectl create configmap nginx-version --from-literal=version=alpine --namespace demo
+
+
+# create a resource defined in the YAML manifests with the name manifest.yaml
+kubectl apply -f manifest.yaml
+
+# delete a resource defined in the YAML manifests with the name manifest.yaml
+kubectl delete -f manifest.yaml
+La documentation Kubernetes est le meilleur endroit pour explorer les paramètres disponibles pour les manifestes YAML. Cependant, un modèle de support YAML peut être construit à l'aide des commandes kubectl. Ceci est possible en utilisant les indicateurs --dry-run=clientet -o yamlqui indiquent que la commande doit être évaluée du côté client uniquement et afficher le résultat au format YAML.
+
+# get YAML template for a resource 
+kubectl create RESOURCE [REQUIRED FLAGS] --dry-run=client -o yaml
+Par exemple, pour obtenir le modèle d'une ressource de déploiement, nous devons utiliser la commande create, transmettre les paramètres requis et associés aux indicateurs --dry-runet -o yaml. Cela génère le modèle de base, qui peut être utilisé pour une configuration plus avancée.
+
+# get the base YAML templated for a demo Deployment running a nxing application
+ kubectl create deploy demo --image=nginx --dry-run=client -o yaml
+ --------------------------------------------
+ Creer le manifest
+ kubectl create ns demo --dry-run=client -o yaml
+
+ kubectl create deploy busybox --image=busybox -r=5 -n demo --dry-run=client -o yaml
+
+kubectl create deploy go-helloword --image=ourobadiou/go-helloword:v1.0.0 --r=3 -namespace test-udacity > namespace.yaml
+
+
+kubectl create deploy busybox --image=busybox -r=5 -n demo --dry-run=client -o yaml > deploy.yaml
